@@ -17,18 +17,21 @@ plugin 'asset_packager', :git => 'git://github.com/sbecker/asset_packager.git'
 
 gem 'haml'
 gem 'authlogic'
-gem 'cucumber'
-gem 'rspec', :lib => false
-gem 'rspec-rails', :lib => false
-gem 'thoughtbot-factory_girl', :lib => 'factory_girl', :source => 'http://gems.github.com'
-gem 'thoughtbot-shoulda', :lib => 'shoulda', :source => 'http://gems.github.com'
-gem 'webrat'
-gem 'mislav-will_paginate', :version => '~> 2.2.3',
-  :lib => 'will_paginate', :source => 'http://gems.github.com'
-gem 'faker', :lib => false, :version => '>=0.3.1'
-gem 'jscruggs-metric_fu', :lib => false, :version => '>=1.1.4'
 
-run "git rm public/javascripts/controls.js public/javascripts/dragdrop.js public/javascripts/effects.js public/javascripts/prototype.js"
+file '.testgems',
+%q{config.gem 'cucumber'
+config.gem 'webrat'
+config.gem 'rspec', :lib => false
+config.gem 'rspec-rails', :lib => false
+config.gem 'thoughtbot-factory_girl', :lib => 'factory_girl', :source => 'http://gems.github.com'
+config.gem 'thoughtbot-shoulda', :lib => 'shoulda', :source => 'http://gems.github.com'
+config.gem 'mislav-will_paginate', :version => '~> 2.2.3', :lib => 'will_paginate', :source => 'http://gems.github.com'
+config.gem 'faker', :lib => false, :version => '>=0.3.1'
+config.gem 'jscruggs-metric_fu', :lib => false, :version => '>=1.1.4'
+}
+run 'cat .testgems >> config/environments/test.rb && rm .testgems'
+
+run "rm public/javascripts/controls.js public/javascripts/dragdrop.js public/javascripts/effects.js public/javascripts/prototype.js"
 run "curl -L http://jqueryjs.googlecode.com/files/jquery-1.3.2.min.js > public/javascripts/jquery.js"
 run "curl -L http://jqueryjs.googlecode.com/svn/trunk/plugins/form/jquery.form.js > public/javascripts/jquery.form.js"
 
@@ -152,23 +155,93 @@ class ApplicationController < ActionController::Base
     redirect_to(session[:return_to] || default)
     session[:return_to] = nil
   end
-  
 end
 CODE
 
-file 'public/javascripts/application.js', <<-CODE
-  jQuery.ajaxSetup({ 
-      'beforeSend': function(xhr) {xhr.setRequestHeader("Accept", "text/javascript")} 
-  });
+file 'app/views/users/new.html.erb', <<-CODE
+<h1>Register</h1>
+<%= error_messages_for :user %>
 
-  $(document).ready(function() {
-    // if($('div.flash').length > 0) {
-    // 	setTimeout("$('div.flash').hide('slide', { direction: 'up' }, 1000)", 5000);
-    // }
-  });
-
+<br/>
+<div class='signup_login_normal'>
+  <h2>Register </h2>
+  <% form_for @user, :url => account_path do |f| %>
+    <%= render :partial => "form", :object => f %>
+    <br/>
+    <%= f.submit "Register" %>
+    <%= link_to 'Cancel', login_url, :class => "button grey" %>
+  <% end %>
+</div>
 CODE
 
+file 'app/views/users/edit.html.erb', <<-CODE
+<h1>Edit My Account</h1>
+
+<% form_for @user, :url => account_path do |f| %>
+  <%= f.error_messages %>
+  <%= render :partial => "form", :object => f %>
+  <%= f.submit "Update" %>
+  <%= link_to "Cancel", root_path, :class => "button grey" %>
+<% end %>
+CODE
+
+file 'app/views/users/_form.erb', <<-CODE
+<%= form.label :login, "Login" %>
+<%= form.text_field :login %>
+
+<%= form.label :email, "E-Mail" %>
+<%= form.text_field :email %>
+
+<%= form.label :password, form.object.new_record? ? nil : "Change password" %>
+<%= form.password_field :password %>
+
+<%= form.label :password_confirmation, "Password Confirmation" %>
+<%= form.password_field :password_confirmation %>
+CODE
+
+file 'app/views/users/show.html.erb', <<-CODE
+<h1><%= @user.email %></h1>
+<%= link_to 'Edit my account', edit_user_path(@user) %>
+CODE
+
+file 'public/javascripts/application.js', <<-CODE
+jQuery.ajaxSetup({ 
+    'beforeSend': function(xhr) {xhr.setRequestHeader("Accept", "text/javascript")} 
+});
+
+$(document).ready(function() {
+  // if($('div.flash').length > 0) {
+  // 	setTimeout("$('div.flash').hide('slide', { direction: 'up' }, 1000)", 5000);
+  // }
+});
+CODE
+
+file 'app/views/user_sessions/new.html.erb', <<-CODE
+<h1>Login</h1>
+<p>Don't have an account yet?  Why not <strong><%= link_to 'register', register_path %></strong>?</p>
+
+<%= error_messages_for :user_session %>
+<br/>
+
+<% form_for @user_session, :url => user_session_path do |f| %>
+  <%= f.label :login, "Login" %>
+  <%= f.text_field :login %>
+  <%= clearfix %>
+
+  <%= f.label :password %>
+  <%= f.password_field :password %>
+  <%= clearfix %>
+
+  <%= f.label :remember_me %>
+  <%= f.check_box :remember_me %>
+
+  <%= clearfix %>
+  <br/>
+  <%= f.submit "Sign In" %>
+<% end %>
+CODE
+
+route 'map.root     :controller => "user_sessions", :action => "new"'
 route 'map.logout   "/logout",   :controller => "user_sessions", :action => "destroy"'
 route 'map.login    "/login",    :controller => "user_sessions", :action => "new"'
 route 'map.register "/register", :controller => "users",         :action => "new"'
@@ -186,7 +259,6 @@ puts "#" * 30
 puts "TO-DO checklist:"
 puts "\t* Write specs for the User model and controller"
 puts "\t* Create views for Authlogic - see http://github.com/binarylogic/authlogic_example/tree/master/app/views for examples"
-puts "\t* Test your Hoptoad installation with: rake hoptoad:test"
 puts "\t* Generate your asset_packager config with: rake asset:packager:create_yml"
 puts "#" * 30
 
