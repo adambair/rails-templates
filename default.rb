@@ -378,8 +378,8 @@ route 'map.resource :account, :controller => "users"'
 route 'map.resources :users'
 
 puts "#" * 30
-puts "TO-DO checklist:"
-puts "\t* Write specs for the User model and controller"
-puts "\t* Generate your asset_packager config with: rake asset:packager:create_yml"
+puts "Things to think about..."
+puts "\t* Update config/database.yml and config/database.yml.example"
+puts "\t* Write specs and features for the User model and controller"
 puts "#" * 30
 
