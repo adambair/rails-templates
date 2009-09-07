@@ -258,7 +258,7 @@ file 'app/views/layouts/_header.erb', <<-CODE
   <div class='actions'>
     <ul>
     <% if current_user %>
-      <li>Logged in as <strong><%= link_to current_user.login, current_user %></strong></li>
+      <li>Logged in as <strong><%= link_to current_user.email, current_user %></strong></li>
       <li><%= link_to 'Settings', edit_account_url %></li>
       <li><%= link_to 'Logout', logout_url %></li>
     <% else %>
@@ -360,7 +360,7 @@ file 'config/asset_packages.yml', <<-CODE
 javascripts:
 - base:
   - jquery
-  - jquery-form
+  - jquery.form
   - application
 stylesheets:
 - base:
